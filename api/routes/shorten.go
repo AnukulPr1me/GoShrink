@@ -43,11 +43,11 @@ func ShortenURL(c *fiber.ctx) error {
 	if err == redis.Nil {
 		_ = r2.Set(database.Ctx, c.IP(), os.Getenv("API_QUOTA"), 30*time.Second).Err()
 	}else{
-		r2.Get(database.Ctx, c.IP().Result())
-		ValInt, _ := strconv.Atoi(val)
+		r2.Get(database.Ctx, c.IP()).Result()
+		valInt, _ := strconv.Atoi(val)
 		if valInt <= 0 {
 			limit, _ := r2.TTL(database.Ctx, c.IP()).Result()
-			return c.Status(fiber.statusServiceUnavailable).JSON(fiber.Map){
+			return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map){
 				"error": "rate limit exceeded",
 				"rate_limit_reset": limit/limit.Nanosecond/limit.Minute,
 			}
@@ -60,12 +60,12 @@ func ShortenURL(c *fiber.ctx) error {
 	}
 
 	if !helpers.RemoveDomainError(body.URL){
-		return c.Status(fiber.statusServiceUnavailable).JSON(fiber.Map{
+		return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
             "error": "URL contains disallowed domain",
         })
 	}
 
-	body.URL = helpers.EnforcHTTP(body.URL)
+	body.URL = helpers.EnforceHTTP(body.URL)
 	var id string
 	if body.CustomShort == "" {
 		id = uuid.New().String()[:6]
@@ -76,7 +76,7 @@ func ShortenURL(c *fiber.ctx) error {
 	defer r.Close()
 	val, _ = r.Get(database.Ctx, id).Result()
 	if(val != ""){
-		return c.Status(fiber.StatusForBidden).JSON(fiber.Map{
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
 			"error": "URL custom short URL is alrady exists",
 		})
 	}
