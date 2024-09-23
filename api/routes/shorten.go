@@ -39,7 +39,7 @@ func ShortenURL(c *fiber.ctx) error {
 
 	r2 := database.CreateClient(1)
 	defer r2.Close()
-	val,err := r2.Get(databaseCtx, c.IP()).Result()
+	val,err := r2.Get(database.Ctx, c.IP()).Result()
 	if err == redis.Nil {
 		_ = r2.Set(database.Ctx, c.IP(), os.Getenv("API_QUOTA"), 30*time.Second).Err()
 	}else{
@@ -100,7 +100,7 @@ func ShortenURL(c *fiber.ctx) error {
 	}
 	r2.Decr(database.Ctx, c.IP())
 	val, _ = r2.Get(database.Ctx, c.IP()).Result()
-	resp.RateRemaining, _ = strconv.Atoi(val)
+	resp.XRateRemaining, _ = strconv.Atoi(val)
 	ttl, _ := r2.TTL(database.Ctx, c.IP()).Result()
 	resp.XRateLimitRest = ttl/time.Nanosecond/time.Minute
 	resp.CustomShort = os.Getenv("DOMAIN") + "/" + id 
