@@ -1,9 +1,18 @@
 Package routes
 
 import (
+	"os"
+	"time"
+	"strconv"
 	"time"
 	"github.com/anukulpr1me/GoShrink/database"
-	"os"
+	"github.com/anukulpr1me/GoShrink/helpers"
+	"github.com/go-redis/redis/v8"
+	"github.com/gofiber/fiber/v2"
+	"github.com/asaskevich/govalidator"
+	"github.com/google/uuid"
+
+	
 )
 
 type request struct{
@@ -37,7 +46,7 @@ func ShortenURL(c *fiber.ctx) error {
 		r2.Get(database.Ctx, c.IP().Result())
 		ValInt, _ := strconv.Atoi(val)
 		if valInt <= 0 {
-			limit, _ := r2.TTL(database.Ctx, c.IP().Result())
+			limit, _ := r2.TTL(database.Ctx, c.IP()).Result()
 			return c.Status(fiber.statusServiceUnavailable).JSON(fiber.Map){
 				"error": "rate limit exceeded",
 				"rate_limit_reset": limit/limit.Nanosecond/limit.Minute,
@@ -81,5 +90,20 @@ func ShortenURL(c *fiber.ctx) error {
             "error": "Unable to connect to server",
         })
 	}
+
+	resp := response {
+		URL: body.URL,
+        CustomShort: "",
+        Expiry: body.Expiry,
+        XRateRemaining: 10,
+        XRateLimitRest: 30,
+	}
 	r2.Decr(database.Ctx, c.IP())
+	val, _ = r2.Get(database.Ctx, c.IP()).Result()
+	resp.RateRemaining, _ = strconv.Atoi(val)
+	ttl, _ := r2.TTL(database.Ctx, c.IP()).Result()
+	resp.XRateLimitRest = ttl/time.Nanosecond/time.Minute
+	resp.CustomShort = os.Getenv("DOMAIN") + "/" + id 
+	return c.Status(fiber.StatusOK).JSON(resp)
+
 }
