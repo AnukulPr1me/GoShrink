@@ -29,7 +29,7 @@ type response struct{
 	XRateLimitRest		time.Duration	`json:"rate_limit_reset"`
 }
 
-func ShortenURL(c *fiber.ctx) error {
+func ShortenURL(c *fiber.Ctx) error {
 	body:=new(request)
 	if err:=c.BodyParser(&body); err!=nil{
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -43,14 +43,14 @@ func ShortenURL(c *fiber.ctx) error {
 	if err == redis.Nil {
 		_ = r2.Set(database.Ctx, c.IP(), os.Getenv("API_QUOTA"), 30*time.Second).Err()
 	}else{
-		r2.Get(database.Ctx, c.IP()).Result()
+		val, _ = r2.Get(database.Ctx, c.IP()).Result()
 		valInt, _ := strconv.Atoi(val)
 		if valInt <= 0 {
 			limit, _ := r2.TTL(database.Ctx, c.IP()).Result()
-			return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map){
+			return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
 				"error": "rate limit exceeded",
 				"rate_limit_reset": limit/limit.Nanosecond/limit.Minute,
-			}
+			})
 		}
 	}
 	if !govalidator.IsURL(body.URL){
