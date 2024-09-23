@@ -1,7 +1,7 @@
 package routes 
 
 import (
-	"github.com/anukulpr1me/GoShrink"
+	"github.com/anukulpr1me/GoShrink/database"
 	"github.com/gofiber/fiber/v2"
     "github.com/gofiber/fiber/v2/middleware/logger"
     "github.com/joho/godotenv"
