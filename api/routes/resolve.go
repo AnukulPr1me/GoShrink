@@ -9,9 +9,9 @@ import (
 
 func ResolveURL(c *fiber.Ctx) error{
 	url:= c.Params("url")
-	r::=database.CreateClient(0)
+	r:=database.CreateClient(0)
 	defer r.Close()
-	value, err := r.Get(database.Ctx, url)
+	value, err := r.Get(database.Ctx, url).Result()
 	if err == radis.Nil{
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
             "error": "URL not found",
