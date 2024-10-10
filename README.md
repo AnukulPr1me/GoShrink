@@ -1,4 +1,4 @@
-# Go Link Shortener
+# GoShrink Link Shortener
 
 A simple and efficient URL shortening service built using Go, Redis, and Docker. This service allows users to generate short URLs for long links, making it easy to share and manage URLs.
 
